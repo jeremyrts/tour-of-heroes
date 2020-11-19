@@ -93,13 +93,21 @@ export class HeroService {
       );
   }
 
+  log(message: string) {
+    this._log(message)
+  }
+
+  handleError<T>(operation = 'opeartion', result?: T) {
+    return this._handleError(operation, result)
+  }
+
   /**
    * Handle Http operation that failed.
    * Let the app continue.
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private _handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
@@ -118,7 +126,7 @@ export class HeroService {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
-  private log(message: String) {
+  private _log(message: String) {
     this.messageService.add(`HeroService: ${message}`)
   }
 }
