@@ -1,3 +1,4 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { HeroesComponent } from './heroes.component';
@@ -8,7 +9,8 @@ describe('HeroesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ HeroesComponent ]
+      declarations: [ HeroesComponent ],
+      imports: [HttpClientTestingModule]
     })
     .compileComponents();
   });
@@ -23,9 +25,25 @@ describe('HeroesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // it('should render Windstorm page', () => {
+  // it('should remove a hero', () => {
+    
+  //   const spyDelete = spyOn(component, 'delete');
+  //   const compiled = fixture.debugElement.nativeElement;
   //   fixture.detectChanges();
-  //   const compiled = fixture.nativeElement;
-  //   expect(compiled.querySelector('h2').textContent).toContain('Windstorm');
+  //   const deleteButton = compiled.querySelector('.button')
+  //   console.log(deleteButton)
+  //   deleteButton.click()
+  //   expect(spyDelete).toHaveBeenCalledTimes(1)
   // });
+
+  it('should call add() method ', () => {
+    
+    const spyAdd = spyOn(component, 'add');
+    const compiled = fixture.nativeElement;
+    const addButton = compiled.querySelector('button')
+    addButton.click()
+    expect(spyAdd).toHaveBeenCalledTimes(1)
+  })
+
+  
 });
