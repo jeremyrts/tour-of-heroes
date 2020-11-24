@@ -7,6 +7,34 @@ const targetHeroDashboardIndex = 3;
 const nameSuffix = 'X';
 const newHeroName = targetHero.name + nameSuffix;
 
+// Hero Class
+class Hero {
+  id: number;
+  name: string;
+
+  // Factory methods
+
+  // Hero from hero list <li> element.
+  static async fromLi(li: ElementFinder): Promise<Hero> {
+      let stringsFromA = await li.all(by.css('a')).getText();
+      let strings = stringsFromA[0].split(' ');
+      return { id: +strings[0], name: strings[1] };
+  }
+
+  // Hero id and name from the given detail element.
+  static async fromDetail(detail: ElementFinder): Promise<Hero> {
+    // Get hero id from the first <div>
+    let _id = await detail.all(by.css('div')).first().getText();
+    // Get name from the h2
+    let _name = await detail.element(by.css('h2')).getText();
+    return {
+        id: +_id.substr(_id.indexOf(' ') + 1),
+        name: _name.substr(0, _name.lastIndexOf(' '))
+    };
+  }
+}
+
+
 describe('Simple use of Tour of heroes', () => {
   let page: AppPage;
 
@@ -22,6 +50,7 @@ describe('Simple use of Tour of heroes', () => {
       level: logging.Level.SEVERE,
     } as logging.Entry));
   });
+
 
   function getPageElts() {
     let navElts = element.all(by.css('app-root nav a'));
@@ -70,9 +99,9 @@ describe('Simple use of Tour of heroes', () => {
       expect(page.appDashboard.isPresent()).toBeTruthy()
     })
 
-  })
+  });
 
-  describe('Navigation', () => {
+  describe('Navigation between main views Dashboard and Heroes', () => {
     beforeAll(() => {
       browser.get('')
     })
@@ -88,6 +117,47 @@ describe('Simple use of Tour of heroes', () => {
       navigateToHeroes.click()
       expect(page.appHeroes.isPresent()).toBeTruthy()
     })
+
+    it('should navigate back to Dashboard', () => {
+      let navigateToDashboard = getPageElts().appDashboardHref
+      let page = getPageElts()
+      navigateToDashboard.click()
+      expect(page.appDashboard.isPresent()).toBeTruthy()
+    })
+  });
+
+  describe('Dashboard page', () => {
+    beforeAll(() => {
+      browser.get('')
+    })
+
+    it('should have 4 top heroes', () => {
+      let heroes = getPageElts().topHeroes
+      expect(heroes.count()).toEqual(4)
+    })
+
+    it(`should navigate to ${targetHero.name} detail page`, () => {
+      // Click on the targeted hero
+      let targetHeroDetail = getPageElts().topHeroes.get(targetHeroDashboardIndex)
+      expect(targetHeroDetail.getText()).toEqual(targetHero.name);
+      targetHeroDetail.click()
+
+      // Wait for angular to finish rendering things before proceeding
+      browser.waitForAngular()
+
+      // Check if we are in <app-hero-detail>
+      let page = getPageElts()
+      expect(page.heroDetail.isPresent()).toBeTruthy('Hero details showed')
+
+      //Check if it's the correct hero by checking both the name and the id 
+    
+      // We can use asynchronous events and methods 
+      let hero = Hero.fromDetail(page.heroDetail)
+      hero.then(hero => {
+        expect(hero.id).toEqual(targetHero.id)
+        expect(hero.name).toEqual(targetHero.name.toUpperCase())
+      })
+    }) 
   })
 
 });
