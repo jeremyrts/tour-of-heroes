@@ -1,5 +1,10 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
+import { HeroService } from '../hero.service';
+import { HEROES } from '../mock-heroes';
 
 import { HeroesComponent } from './heroes.component';
 
@@ -7,12 +12,18 @@ describe('HeroesComponent', () => {
   let component: HeroesComponent;
   let fixture: ComponentFixture<HeroesComponent>;
 
+
   beforeEach(async () => {
+    const testHeroes = HEROES
+    const heroToDelete = testHeroes[0]
+    const heroesService = jasmine.createSpyObj('HeroService', ['getHeroes']);
+    const getHeroes = heroesService.getHeroes.and.returnValue(of(testHeroes));
     await TestBed.configureTestingModule({
-      declarations: [ HeroesComponent ],
-      imports: [HttpClientTestingModule]
+      declarations: [HeroesComponent],
+      imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([])],
+      providers: [{provide: HeroService, useValue: heroesService}]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
@@ -21,23 +32,31 @@ describe('HeroesComponent', () => {
     fixture.detectChanges();
   });
 
+  it('should call getHeroes()', () => {
+    const spyGetHeroes = spyOn(component, 'getHeroes').and.callThrough();
+    component.ngOnInit()
+    fixture.detectChanges()
+    expect(spyGetHeroes).toHaveBeenCalledTimes(1)
+  })
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  // it('should remove a hero', () => {
-    
-  //   const spyDelete = spyOn(component, 'delete');
-  //   const compiled = fixture.debugElement.nativeElement;
-  //   fixture.detectChanges();
-  //   const deleteButton = compiled.querySelector('.button')
-  //   console.log(deleteButton)
-  //   deleteButton.click()
-  //   expect(spyDelete).toHaveBeenCalledTimes(1)
-  // });
+  it('should remove a hero method', () => {
+    fixture.detectChanges()
+    const spyDelete = spyOn(component, 'delete'); 
+    const listHeroes = fixture.debugElement.queryAll(By.css('li'));
+    const deleteButton = fixture.debugElement.queryAll(By.css('.delete'))[0];
+    deleteButton.triggerEventHandler('click', null)
+    const newlistHeroes = fixture.debugElement.queryAll(By.css('li'));
+    expect(spyDelete).toHaveBeenCalledTimes(1)
+    expect(newlistHeroes.length).toEqual(listHeroes.length - 1)
+  });
+
 
   it('should call add() method ', () => {
-    
+
     const spyAdd = spyOn(component, 'add');
     const compiled = fixture.nativeElement;
     const addButton = compiled.querySelector('button')
@@ -45,5 +64,5 @@ describe('HeroesComponent', () => {
     expect(spyAdd).toHaveBeenCalledTimes(1)
   })
 
-  
+
 });
