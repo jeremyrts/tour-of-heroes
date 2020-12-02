@@ -4,20 +4,20 @@ import { DashboardComponent } from './dashboard.component';
 import { HttpTestingController, HttpClientTestingModule, } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { HEROES } from '../mock-heroes';
 import { HeroService } from '../hero.service';
 import { HeroSearchComponent } from '../hero-search/hero-search.component';
+import { Hero } from '../hero';
 
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
-  let heroService;
-  let getHeroesSpy
+  let heroService: jasmine.SpyObj<HeroService>;
   beforeEach(async () => {
     heroService = jasmine.createSpyObj('HeroService', ['getHeroes']);
-    getHeroesSpy = heroService.getHeroes.and.returnValue( of(HEROES) );
+    heroService.getHeroes.and.returnValue( of(HEROES) );
     await TestBed.configureTestingModule({
       declarations: [ DashboardComponent, HeroSearchComponent ],
       imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([])],
@@ -42,10 +42,6 @@ describe('DashboardComponent', () => {
     let compiled = fixture.nativeElement
     expect(compiled.querySelector('h3').textContent).toEqual('Top Heroes')
   })
-
-  it('should call heroService', waitForAsync(() => {
-    expect(getHeroesSpy.calls.any()).toBe(true);
-    }));
 
   it('should display 4 links', waitForAsync(() => {
     expect(fixture.nativeElement.querySelectorAll('a').length).toEqual(4);
