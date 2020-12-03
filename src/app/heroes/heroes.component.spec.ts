@@ -79,5 +79,18 @@ describe('HeroesComponent', () => {
     expect(component.heroes.length).toEqual(numberOfHeroes + 1)
   })
 
+  it('should do nothing if name parameter in add() is empty', () => {
+    const numberOfHeroes = component.heroes.length
+    const compiled = fixture.nativeElement;
+    const input = compiled.querySelector('input')
+    input.value = ''
+    input.dispatchEvent(new Event('input'))
+    const spyAdd = spyOn(component, 'add').and.callThrough();
+    const addButton = compiled.querySelector('button')
+    addButton.click()
+    expect(spyAdd).toHaveBeenCalledTimes(1)
+    expect(component.heroes.length).toEqual(numberOfHeroes)
+  })
+
 
 });
