@@ -16,9 +16,9 @@ class Hero {
 
   // Hero from hero list <li> element.
   static async fromLi(li: ElementFinder): Promise<Hero> {
-      let stringsFromA = await li.all(by.css('a')).getText();
-      let strings = stringsFromA[0].split(' ');
-      return { id: +strings[0], name: strings[1] };
+    let stringsFromA = await li.all(by.css('a')).getText();
+    let strings = stringsFromA[0].split(' ');
+    return { id: +strings[0], name: strings[1] };
   }
 
   // Hero id and name from the given detail element.
@@ -28,8 +28,8 @@ class Hero {
     // Get name from the h2
     let _name = await detail.element(by.css('h2')).getText();
     return {
-        id: +_id.substr(_id.indexOf(' ') + 1),
-        name: _name.substr(0, _name.lastIndexOf(' '))
+      id: +_id.substr(_id.indexOf(' ') + 1),
+      name: _name.substr(0, _name.lastIndexOf(' '))
     };
   }
 }
@@ -40,7 +40,7 @@ describe('Simple use of Tour of heroes', () => {
 
   // beforeEach(() => {
   //   page = new AppPage();
-   
+
   // });
 
   afterEach(async () => {
@@ -150,14 +150,36 @@ describe('Simple use of Tour of heroes', () => {
       expect(page.heroDetail.isPresent()).toBeTruthy('Hero details showed')
 
       //Check if it's the correct hero by checking both the name and the id 
-    
+
       // We can use asynchronous events and methods 
       let hero = Hero.fromDetail(page.heroDetail)
       hero.then(hero => {
         expect(hero.id).toEqual(targetHero.id)
         expect(hero.name).toEqual(targetHero.name.toUpperCase())
       })
-    }) 
+    })
+
+    it(`should update ${targetHero.name} name on input`, () => {
+      let page = getPageElts().heroDetail
+      let input = page.element(by.css('input'))
+      input.sendKeys(nameSuffix)
+      let hero = Hero.fromDetail(page)
+
+      hero.then(hero => {
+        expect(hero.id).toEqual(targetHero.id)
+        expect(hero.name).toEqual(newHeroName.toUpperCase())
+      })
+    })
+
+    it(`should save and shows ${newHeroName} in Dashboard`, () => {
+      element(by.buttonText('save')).click()
+      // Wait for angular to finish rendering things before proceeding
+      browser.waitForAngular()
+
+      let targetHeroDetail = getPageElts().topHeroes.get(targetHeroDashboardIndex)
+      expect(targetHeroDetail.getText()).toEqual(newHeroName);
+
+    })
   })
 
 });
