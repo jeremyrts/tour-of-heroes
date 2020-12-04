@@ -52,7 +52,7 @@ describe('Simple use of Tour of heroes', () => {
   });
 
 
-  function getPageElts() {
+  const getPageElts = () => {
     let navElts = element.all(by.css('app-root nav a'));
 
     return {
@@ -72,6 +72,17 @@ describe('Simple use of Tour of heroes', () => {
       searchBox: element(by.css('#search-box')),
       searchResults: element.all(by.css('.search-result li'))
     };
+  }
+
+  const updateHeroInDetailView = () => {
+    let page = getPageElts().heroDetail
+    let input = page.element(by.css('input'))
+    input.sendKeys(nameSuffix)
+    let hero = Hero.fromDetail(page)
+    hero.then(hero => {
+      expect(hero.id).toEqual(targetHero.id);
+      expect(hero.name).toEqual(newHeroName.toUpperCase());
+    })
   }
 
   describe('Initial page', () => {
@@ -160,15 +171,7 @@ describe('Simple use of Tour of heroes', () => {
     })
 
     it(`should update ${targetHero.name} name on input`, () => {
-      let page = getPageElts().heroDetail
-      let input = page.element(by.css('input'))
-      input.sendKeys(nameSuffix)
-      let hero = Hero.fromDetail(page)
-
-      hero.then(hero => {
-        expect(hero.id).toEqual(targetHero.id)
-        expect(hero.name).toEqual(newHeroName.toUpperCase())
-      })
+      updateHeroInDetailView()
     })
 
     it(`should save and shows ${newHeroName} in Dashboard`, () => {
@@ -182,7 +185,82 @@ describe('Simple use of Tour of heroes', () => {
     })
   })
 
+  describe('Heroes page', () => {
+
+    beforeAll(() => {
+      browser.get('/heroes')
+    })
+
+    it('should have all the 10 heroes displayed', () => {
+      let page = getPageElts()
+      expect(page.allHeroes.count()).toEqual(10, 'number of heroes')
+    })
+
+    it(`should navigate to ${targetHero.name} detail page`, () => {
+      getHeroLiEltById(targetHero.id).click();
+
+      let page = getPageElts();
+      expect(page.heroDetail.isPresent()).toBeTruthy('Shows hero detail')
+      let hero = Hero.fromDetail(page.heroDetail)
+      hero.then(() => {
+        hero.then(hero => {
+          expect(hero.id).toEqual(targetHero.id)
+          expect(hero.name).toEqual(targetHero.name.toUpperCase())
+        })
+      })
+    })
+
+    it('should update the name on input', () => {
+      updateHeroInDetailView()
+    })
+
+    it(`should show ${newHeroName} in list`, () => {
+      element(by.buttonText('save')).click()
+      browser.waitForAngular()
+
+      let expectedText = `${targetHero.id} ${newHeroName}`
+      expect(getHeroAEltById(targetHero.id).getText()).toEqual(expectedText)
+    })
+
+    it(`should delete ${newHeroName} from Heroes List`, () => {
+      let currentHeroes = getPageElts().allHeroes.map(hero => Hero.fromLi(hero))
+      currentHeroes.then(currentHeroes => {
+        const li = getHeroLiEltById(targetHero.id);
+        li.element(by.buttonText('x')).click();
+        const page = getPageElts();
+        expect(page.appHeroes.isPresent()).toBeTruthy();
+        expect(page.allHeroes.count()).toEqual(9, 'number of heroes');
+
+        let heroesAfter = getPageElts().allHeroes.map((hero: ElementFinder) => Hero.fromLi(hero))
+        heroesAfter.then(heroesAfter => {
+          let expectedHeroes = currentHeroes.filter((hero: Hero) => hero.name !== newHeroName)
+          expect(heroesAfter).toEqual(expectedHeroes)
+        })
+      })
+    })
+
+    it(`should add back ${targetHero.name}`, async () => {
+      const newHeroName = 'Magneta'
+      const heroesBefore: Array<Hero> = await getPageElts().allHeroes.map(hero => Hero.fromLi(hero))
+      const numHeroes = heroesBefore.length
+
+      element(by.css('input')).sendKeys(newHeroName);
+      element(by.buttonText('add')).click();
+
+      let page = getPageElts();
+      let heroesAfter = await getPageElts().allHeroes.map(hero => Hero.fromLi(hero))
+
+      expect(heroesAfter.length).toEqual(numHeroes + 1, 'number of heroes');
+      expect(heroesAfter.slice(0, numHeroes)).toEqual(heroesBefore, 'Old heroes are still there');
+
+      const maxId = heroesBefore[heroesBefore.length - 1].id;
+      expect(heroesAfter[numHeroes]).toEqual({id: maxId + 1, name: newHeroName});
+    })
+
+  })
+
 });
+
 
 
 // Utils functions
@@ -192,3 +270,20 @@ const expectHeading = (hLevel: number, expectedText: string): void => {
   let hText = element(by.css(hTag)).getText()
   expect(hText).toEqual(expectedText, hTag)
 }
+
+const getHeroAEltById = (id: number): ElementFinder => {
+  let spanForId = element(by.cssContainingText('li span.badge', id.toString()));
+  return spanForId.element(by.xpath('..'));
+}
+
+const getHeroLiEltById = (id: number): ElementFinder => {
+  let spanForId = element(by.cssContainingText('li span.badge', id.toString()));
+  return spanForId.element(by.xpath('../..'));
+}
+
+// const toHeroArray = (allHeroes: ElementArrayFinder): Promise<Hero[]> => {
+//   let promisedHeroes = await allHeroes.map(Hero.fromLi);
+//   // The cast is necessary to get around issuing with the signature of Promise.all()
+//   return <Promise<any>> Promise.all(promisedHeroes)
+// }
+
