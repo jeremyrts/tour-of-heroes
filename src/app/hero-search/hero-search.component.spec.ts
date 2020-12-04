@@ -7,6 +7,7 @@ import { HeroSearchComponent } from './hero-search.component';
 describe('HeroSearchComponent', () => {
   let component: HeroSearchComponent;
   let fixture: ComponentFixture<HeroSearchComponent>;
+  const searchValue: string = "a";
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
