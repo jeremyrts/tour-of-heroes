@@ -147,7 +147,7 @@ describe('Simple use of Tour of heroes', () => {
       expect(heroes.count()).toEqual(4)
     })
 
-    it(`should navigate to ${targetHero.name} detail page`, () => {
+    it(`should navigate to ${targetHero.name} detail page`, async () => {
       // Click on the targeted hero
       let targetHeroDetail = getPageElts().topHeroes.get(targetHeroDashboardIndex)
       expect(targetHeroDetail.getText()).toEqual(targetHero.name);
@@ -163,20 +163,17 @@ describe('Simple use of Tour of heroes', () => {
       //Check if it's the correct hero by checking both the name and the id 
 
       // We can use asynchronous events and methods 
-      let hero = Hero.fromDetail(page.heroDetail)
-      hero.then(hero => {
-        expect(hero.id).toEqual(targetHero.id)
-        expect(hero.name).toEqual(targetHero.name.toUpperCase())
-      })
+      let hero = await Hero.fromDetail(page.heroDetail)
+      expect(hero.id).toEqual(targetHero.id)
+      expect(hero.name).toEqual(targetHero.name.toUpperCase())
     })
 
     it(`should update ${targetHero.name} name on input`, () => {
       updateHeroInDetailView()
     })
 
-    it(`should save and shows ${newHeroName} in Dashboard`, () => {
+    it(`should save and shows ${newHeroName} in Dashboard`, async () => {
       element(by.buttonText('save')).click()
-      // Wait for angular to finish rendering things before proceeding
       browser.waitForAngular()
 
       let targetHeroDetail = getPageElts().topHeroes.get(targetHeroDashboardIndex)
@@ -196,18 +193,14 @@ describe('Simple use of Tour of heroes', () => {
       expect(page.allHeroes.count()).toEqual(10, 'number of heroes')
     })
 
-    it(`should navigate to ${targetHero.name} detail page`, () => {
+    it(`should navigate to ${targetHero.name} detail page`, async () => {
       getHeroLiEltById(targetHero.id).click();
 
       let page = getPageElts();
       expect(page.heroDetail.isPresent()).toBeTruthy('Shows hero detail')
-      let hero = Hero.fromDetail(page.heroDetail)
-      hero.then(() => {
-        hero.then(hero => {
-          expect(hero.id).toEqual(targetHero.id)
-          expect(hero.name).toEqual(targetHero.name.toUpperCase())
-        })
-      })
+      let hero = await Hero.fromDetail(page.heroDetail)
+      expect(hero.id).toEqual(targetHero.id)
+      expect(hero.name).toEqual(targetHero.name.toUpperCase())
     })
 
     it('should update the name on input', () => {
@@ -222,21 +215,17 @@ describe('Simple use of Tour of heroes', () => {
       expect(getHeroAEltById(targetHero.id).getText()).toEqual(expectedText)
     })
 
-    it(`should delete ${newHeroName} from Heroes List`, () => {
-      let currentHeroes = getPageElts().allHeroes.map(hero => Hero.fromLi(hero))
-      currentHeroes.then(currentHeroes => {
-        const li = getHeroLiEltById(targetHero.id);
-        li.element(by.buttonText('x')).click();
-        const page = getPageElts();
-        expect(page.appHeroes.isPresent()).toBeTruthy();
-        expect(page.allHeroes.count()).toEqual(9, 'number of heroes');
+    it(`should delete ${newHeroName} from Heroes List`, async () => {
+      let currentHeroes = await getPageElts().allHeroes.map(async (hero) => await Hero.fromLi(hero))
+      const li = getHeroLiEltById(targetHero.id);
+      li.element(by.buttonText('x')).click();
+      const page = getPageElts();
+      expect(page.appHeroes.isPresent()).toBeTruthy();
+      expect(page.allHeroes.count()).toEqual(9, 'number of heroes');
 
-        let heroesAfter = getPageElts().allHeroes.map((hero: ElementFinder) => Hero.fromLi(hero))
-        heroesAfter.then(heroesAfter => {
-          let expectedHeroes = currentHeroes.filter((hero: Hero) => hero.name !== newHeroName)
-          expect(heroesAfter).toEqual(expectedHeroes)
-        })
-      })
+      let heroesAfter = await getPageElts().allHeroes.map(async (hero: ElementFinder) => await Hero.fromLi(hero))
+      let expectedHeroes = currentHeroes.filter((hero: Hero) => hero.name !== newHeroName)
+      expect(heroesAfter).toEqual(expectedHeroes)
     })
 
     it(`should add back ${targetHero.name}`, async () => {
@@ -254,23 +243,23 @@ describe('Simple use of Tour of heroes', () => {
       expect(heroesAfter.slice(0, numHeroes)).toEqual(heroesBefore, 'Old heroes are still there');
 
       const maxId = heroesBefore[heroesBefore.length - 1].id;
-      expect(heroesAfter[numHeroes]).toEqual({id: maxId + 1, name: newHeroName});
+      expect(heroesAfter[numHeroes]).toEqual({ id: maxId + 1, name: newHeroName });
     })
 
   })
 
 
   describe('Search component', () => {
-     beforeAll(() => browser.get(''));
+    beforeAll(() => browser.get(''));
 
-     it(`should search for 'Ma' and find 4 heroes`, async () => {
-       getPageElts().searchBox.sendKeys('Ma');
-       browser.sleep(1000)
+    it(`should search for 'Ma' and find 4 heroes`, async () => {
+      getPageElts().searchBox.sendKeys('Ma');
+      browser.sleep(1000)
 
-       expect(getPageElts().searchResults.count()).toBe(4)
-     })
+      expect(getPageElts().searchResults.count()).toBe(4)
+    })
 
-     it(`should continue the search with 'g' annd find 2 heroes`, async () => {
+    it(`should continue the search with 'g' annd find 2 heroes`, async () => {
       getPageElts().searchBox.sendKeys('g');
       browser.sleep(1000);
       expect(getPageElts().searchResults.count()).toBe(2);
@@ -321,10 +310,4 @@ const getHeroLiEltById = (id: number): ElementFinder => {
   let spanForId = element(by.cssContainingText('li span.badge', id.toString()));
   return spanForId.element(by.xpath('../..'));
 }
-
-// const toHeroArray = (allHeroes: ElementArrayFinder): Promise<Hero[]> => {
-//   let promisedHeroes = await allHeroes.map(Hero.fromLi);
-//   // The cast is necessary to get around issuing with the signature of Promise.all()
-//   return <Promise<any>> Promise.all(promisedHeroes)
-// }
 
