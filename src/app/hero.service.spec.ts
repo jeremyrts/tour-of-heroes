@@ -54,9 +54,6 @@ describe('HeroService', () => {
       // Respond with the mock heroes
       req.flush(mockHeroes);
       expect(heroService.log).toHaveBeenCalledTimes(1);
-
-      // Error : handleError is still being called for some reason
-      // expect(heroService.handleError).not.toHaveBeenCalled();
     })
 
     it('should fail and display an error on log', () => {
