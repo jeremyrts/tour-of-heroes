@@ -43,7 +43,7 @@ describe('HeroSearchComponent', () => {
   it('should call search() method on input', () => {
     const compiled = fixture.nativeElement
     const inputElement = compiled.querySelector('input')
-    const spySearch = spyOn(component, 'search')
+    const spySearch = spyOn(component, 'search').and.callThrough()
     inputElement.value = searchValue
     inputElement.dispatchEvent(new Event('input'))
     expect(spySearch).toHaveBeenCalledTimes(1)
