@@ -259,6 +259,47 @@ describe('Simple use of Tour of heroes', () => {
 
   })
 
+
+  describe('Search component', () => {
+     beforeAll(() => browser.get(''));
+
+     it(`should search for 'Ma' and find 4 heroes`, async () => {
+       getPageElts().searchBox.sendKeys('Ma');
+       browser.sleep(1000)
+
+       expect(getPageElts().searchResults.count()).toBe(4)
+     })
+
+     it(`should continue the search with 'g' annd find 2 heroes`, async () => {
+      getPageElts().searchBox.sendKeys('g');
+      browser.sleep(1000);
+      expect(getPageElts().searchResults.count()).toBe(2);
+    });
+
+
+    it(`should continue the search with 'e' and gets ${targetHero.name}`, async () => {
+      getPageElts().searchBox.sendKeys('n');
+      browser.sleep(1000);
+      let page = getPageElts();
+      expect(page.searchResults.count()).toBe(1);
+      let hero = page.searchResults.get(0);
+      expect(hero.getText()).toEqual(targetHero.name);
+    });
+
+    it(`should navigate to ${targetHero.name} details view`, async () => {
+      let hero = getPageElts().searchResults.get(0);
+      expect(hero.getText()).toEqual(targetHero.name);
+      hero.click();
+
+      let page = getPageElts();
+      expect(page.heroDetail.isPresent()).toBeTruthy('shows hero detail');
+      let hero2 = await Hero.fromDetail(page.heroDetail);
+      expect(hero2.id).toEqual(targetHero.id);
+      expect(hero2.name).toEqual(targetHero.name.toUpperCase());
+    });
+
+  })
+
 });
 
 
